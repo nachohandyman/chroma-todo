@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chroma HQ — Command Center</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080c10;
+  --surface: #0d1318;
+  --surface2: #111920;
+  --border: rgba(255,255,255,0.07);
+  --accent: #3dffc0;
+  --accent2: #ff6b35;
+  --accent3: #4d9fff;
+  --text: #e8f0f5;
+  --text-muted: #5a7080;
+  --text-dim: #8aa0b0;
+  --font-mono: 'Space Mono', monospace;
+  --font-body: 'DM Sans', sans-serif;
+  --red: #ff4d6d;
+  --amber: #ffb347;
+  --green: #3dffc0;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-body); min-height: 100vh; }
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: linear-gradient(rgba(61,255,192,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(61,255,192,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none; z-index: 0;
+}
+.app { position: relative; z-index: 1; max-width: 720px; margin: 0 auto; padding: 1.5rem 1rem; }
+
+/* Header */
+.header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+.logo { display: flex; align-items: center; gap: 10px; }
+.logo-mark { width: 32px; height: 32px; border: 1.5px solid var(--accent); border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+.logo-mark::after { content: ''; width: 10px; height: 10px; background: var(--accent); border-radius: 2px; animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.85)} }
+.logo-text { font-family: var(--font-mono); font-size: 13px; font-weight: 700; letter-spacing: 0.08em; }
+.logo-sub { font-size: 10px; color: var(--text-muted); letter-spacing: 0.1em; font-family: var(--font-mono); margin-top: 2px; }
+.header-right { text-align: right; }
+.date-display { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); letter-spacing: 0.05em; }
+.stats-display { font-family: var(--font-mono); font-size: 11px; color: var(--accent); margin-top: 3px; }
+
+/* Sync indicator */
+.sync-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); margin-right: 5px; vertical-align: middle; }
+.sync-dot.synced { background: var(--accent); box-shadow: 0 0 5px var(--accent); }
+.sync-dot.syncing { background: var(--amber); animation: pulse 0.8s ease-in-out infinite; }
+
+/* Panel */
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 12px; overflow: hidden; transition: border-color 0.2s; }
+.panel:hover { border-color: rgba(61,255,192,0.15); }
+.panel-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+.panel-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; color: var(--accent); text-transform: uppercase; }
+.panel-sub { font-size: 11px; color: var(--text-muted); }
+
+/* Pomodoro */
+.pom-body { padding: 14px; }
+.pom-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.pom-modes { display: flex; gap: 6px; }
+.pom-mode-btn { font-family: var(--font-mono); font-size: 10px; padding: 4px 10px; border: 1px solid var(--border); border-radius: 4px; cursor: pointer; background: transparent; color: var(--text-muted); letter-spacing: 0.05em; transition: all 0.15s; }
+.pom-mode-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(61,255,192,0.06); }
+.pom-main { display: flex; align-items: center; gap: 16px; }
+.pom-timer { font-family: var(--font-mono); font-size: 42px; font-weight: 700; color: var(--text); letter-spacing: -0.02em; min-width: 105px; transition: color 0.3s; }
+.pom-timer.running { color: var(--accent); }
+.pom-timer.break { color: var(--accent3); }
+.pom-controls { display: flex; flex-direction: column; gap: 6px; }
+.btn-primary { font-family: var(--font-mono); font-size: 11px; padding: 7px 16px; background: var(--accent); color: var(--bg); border: none; border-radius: 5px; cursor: pointer; font-weight: 700; letter-spacing: 0.05em; transition: all 0.15s; }
+.btn-primary:hover { background: #2dedb0; }
+.btn-secondary { font-family: var(--font-mono); font-size: 10px; padding: 5px 14px; background: transparent; color: var(--text-muted); border: 1px solid var(--border); border-radius: 5px; cursor: pointer; letter-spacing: 0.05em; transition: all 0.15s; }
+.btn-secondary:hover { border-color: rgba(61,255,192,0.3); color: var(--text); }
+.pom-right { margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.pom-dots { display: flex; gap: 5px; }
+.pom-dot { width: 7px; height: 7px; border-radius: 50%; border: 1px solid var(--border); transition: all 0.3s; }
+.pom-dot.done { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 6px var(--accent); }
+.pom-active-task { font-size: 11px; color: var(--text-muted); text-align: right; max-width: 160px; line-height: 1.4; }
+.pom-active-task span { color: var(--text-dim); font-size: 12px; display: block; }
+.progress-track { height: 2px; background: var(--border); border-radius: 2px; margin-top: 12px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 1s linear; box-shadow: 0 0 8px var(--accent); }
+
+/* Block */
+.block-items { padding: 10px; display: flex; flex-direction: column; gap: 6px; min-height: 60px; }
+.block-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border: 1px solid var(--border); border-radius: 7px; transition: all 0.15s; background: var(--surface2); }
+.block-item:hover { border-color: rgba(61,255,192,0.2); }
+.block-item.active-pom { border-color: var(--accent); background: rgba(61,255,192,0.05); }
+.block-item.done-item { opacity: 0.35; }
+.block-num { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); width: 16px; flex-shrink: 0; }
+.block-check { width: 17px; height: 17px; border: 1px solid var(--border); border-radius: 4px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s; }
+.block-check.checked { background: var(--accent); border-color: var(--accent); }
+.block-check.checked::after { content: '✓'; font-size: 11px; color: var(--bg); font-weight: 700; }
+.block-text { flex: 1; font-size: 13px; color: var(--text); line-height: 1.3; }
+.block-text.striked { text-decoration: line-through; color: var(--text-muted); }
+.block-actions { display: flex; gap: 4px; }
+.micro-btn { font-family: var(--font-mono); font-size: 9px; padding: 3px 7px; border: 1px solid var(--border); border-radius: 3px; cursor: pointer; background: transparent; color: var(--text-muted); letter-spacing: 0.05em; transition: all 0.15s; white-space: nowrap; }
+.micro-btn:hover { border-color: var(--accent); color: var(--accent); }
+.micro-btn.danger:hover { border-color: var(--red); color: var(--red); }
+.block-add-row { padding: 8px 10px; border-top: 1px solid var(--border); }
+.block-add-btn { width: 100%; padding: 7px; border: 1px dashed var(--border); border-radius: 6px; background: transparent; color: var(--text-muted); font-size: 11px; font-family: var(--font-mono); cursor: pointer; letter-spacing: 0.05em; transition: all 0.15s; }
+.block-add-btn:hover { border-color: var(--accent); color: var(--accent); }
+.block-empty { padding: 16px 10px; font-size: 12px; color: var(--text-muted); font-family: var(--font-mono); text-align: center; letter-spacing: 0.05em; }
+
+/* Lists */
+.lists-nav { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; }
+.list-tab { font-family: var(--font-mono); font-size: 10px; padding: 5px 11px; border: 1px solid var(--border); border-radius: 4px; cursor: pointer; background: transparent; color: var(--text-muted); letter-spacing: 0.06em; transition: all 0.15s; }
+.list-tab.active { border-color: var(--accent); color: var(--accent); background: rgba(61,255,192,0.06); }
+.list-tab.add-tab { border-style: dashed; }
+.list-tab:hover:not(.active) { border-color: rgba(61,255,192,0.3); color: var(--text-dim); }
+
+/* Task list */
+.task-list-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.task-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--border); transition: background 0.15s; }
+.task-item:last-of-type { border-bottom: none; }
+.task-item:hover { background: var(--surface2); }
+.task-item.done-item { opacity: 0.35; }
+.task-prio { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; margin-top: 6px; }
+.p-alta { background: var(--red); box-shadow: 0 0 5px var(--red); }
+.p-media { background: var(--amber); }
+.p-baja { background: var(--text-muted); }
+.task-body { flex: 1; }
+.task-title { font-size: 13px; color: var(--text); line-height: 1.4; }
+.task-title.striked { text-decoration: line-through; color: var(--text-muted); }
+.task-meta { font-family: var(--font-mono); font-size: 9px; color: var(--text-muted); margin-top: 2px; letter-spacing: 0.06em; }
+.task-acts { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
+.add-area { padding: 12px 14px; border-top: 1px solid var(--border); background: var(--surface2); }
+.add-row { display: flex; gap: 8px; align-items: flex-start; }
+.add-input { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; font-size: 13px; color: var(--text); font-family: var(--font-body); resize: none; height: 36px; transition: border-color 0.15s; }
+.add-input:focus { outline: none; border-color: var(--accent); }
+.add-input::placeholder { color: var(--text-muted); }
+.prio-select { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; font-size: 11px; font-family: var(--font-mono); color: var(--text-dim); margin-top: 6px; letter-spacing: 0.04em; }
+.add-hint { font-family: var(--font-mono); font-size: 9px; color: var(--text-muted); margin-top: 6px; letter-spacing: 0.06em; }
+
+/* Toast */
+.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(10px); background: var(--surface); border: 1px solid var(--accent); border-radius: 6px; padding: 8px 16px; font-family: var(--font-mono); font-size: 11px; color: var(--accent); letter-spacing: 0.06em; opacity: 0; transition: all 0.2s; pointer-events: none; z-index: 100; white-space: nowrap; box-shadow: 0 0 20px rgba(61,255,192,0.15); }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <div class="logo">
+      <div class="logo-mark"></div>
+      <div>
+        <div class="logo-text">CHROMA HQ</div>
+        <div class="logo-sub">COMMAND CENTER</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="date-display" id="dateDisplay"></div>
+      <div class="stats-display">
+        <span class="sync-dot" id="syncDot"></span>
+        <span id="statsDisplay">conectando...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pomodoro -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-label">// pomodoro</span>
+      <span class="panel-sub" id="pomSessionLabel">sesión 0 de 4</span>
+    </div>
+    <div class="pom-body">
+      <div class="pom-top">
+        <div class="pom-modes">
+          <button class="pom-mode-btn active" id="btnWork" onclick="setMode('work')">TRABAJO 25'</button>
+          <button class="pom-mode-btn" id="btnBreak" onclick="setMode('break')">BREAK 5'</button>
+        </div>
+      </div>
+      <div class="pom-main">
+        <div class="pom-timer" id="timerDisplay">25:00</div>
+        <div class="pom-controls">
+          <button class="btn-primary" id="startBtn" onclick="toggleTimer()">INICIAR</button>
+          <button class="btn-secondary" onclick="resetTimer()">RESET</button>
+        </div>
+        <div class="pom-right">
+          <div class="pom-dots" id="pomDots"></div>
+          <div class="pom-active-task">enfocando en:<span id="activeTaskName">—</span></div>
+        </div>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="timerProgress" style="width:100%"></div></div>
+    </div>
+  </div>
+
+  <!-- Bloque -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-label">// bloque de acción</span>
+      <div style="display:flex;gap:6px">
+        <span class="panel-sub" id="blockCount">0/3 tareas</span>
+        <button class="micro-btn" onclick="clearBlock()">limpiar</button>
+      </div>
+    </div>
+    <div class="block-items" id="blockItems">
+      <div class="block-empty">// agrega hasta 3 tareas desde las listas</div>
+    </div>
+    <div class="block-add-row">
+      <button class="block-add-btn" onclick="toggleBlockInput()">+ agregar manualmente</button>
+      <div id="blockInputRow" style="display:none;margin-top:6px;display:none">
+        <div style="display:flex;gap:6px">
+          <input class="add-input" id="blockInput" placeholder="tarea para el bloque..." style="flex:1"
+            onkeydown="if(event.key==='Enter'){addToBlockManual()}">
+          <button class="btn-primary" style="padding:7px 12px;font-size:10px" onclick="addToBlockManual()">OK</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lists -->
+  <div class="lists-nav" id="listsNav"></div>
+  <div class="task-list-panel" id="taskListPanel"></div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getFirestore, collection, doc, onSnapshot, setDoc, deleteDoc, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA1vVD5nixeB3h4ic_MFxTgBFDEt7R3qVU",
+  authDomain: "chroma-hq-todo.firebaseapp.com",
+  projectId: "chroma-hq-todo",
+  storageBucket: "chroma-hq-todo.firebasestorage.app",
+  messagingSenderId: "102028768740",
+  appId: "1:102028768740:web:ff1b52974d6b6f7cf883f1"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const LISTS = [
+  {id:'chroma',name:'CHROMA INK'},
+  {id:'marketing',name:'MARKETING'},
+  {id:'creativa',name:'CREATIVA'},
+  {id:'ingenieria',name:'INGENIERÍA'},
+  {id:'metas',name:'METAS'},
+  {id:'redes',name:'REDES'},
+  {id:'rebe',name:'REBE'},
+  {id:'eva',name:'EVA'},
+];
+
+const KEYWORDS = {
+  marketing:['ads','campaña','perpetua','tiktok','facebook','instagram','meta','publicidad','afiliado','spark','influencer','ugc','contenido','viral','reel','video','anuncio'],
+  ingenieria:['agente','bot','api','github','código','script','python','andrés','deploy','servidor','automatiz','claude code','n8n'],
+  creativa:['libro','ilustración','portada','nano banana','json','prompt','sirenas','mermaids','whimsical','hardcover','paperback','toño','lu','lorena','inkalia','idd','inky'],
+  metas:['meta','objetivo','millón','$1','royalt','ingreso','financiero','ganancia'],
+  redes:['instagram','tiktok','facebook','red social','post','story','comunidad'],
+  rebe:['rebe','rebeca','onboarding','capacitación'],
+  eva:['eva','claude','agente ia','sistema','configurar','implementar'],
+};
+
+function classify(text){
+  const t=text.toLowerCase();
+  let best='chroma',bestScore=0;
+  Object.entries(KEYWORDS).forEach(([list,words])=>{
+    const score=words.filter(w=>t.includes(w)).length;
+    if(score>bestScore){bestScore=score;best=list;}
+  });
+  return best;
+}
+
+const INIT_TASKS = {
+  chroma:[
+    {text:'Lanzar libro de sirenas con pipeline de Whimsical',priority:'alta'},
+    {text:'Revisar ROAS de Spooky Cute en Perpetua',priority:'alta'},
+    {text:'Escalar ads de Mandalas — ROAS 7.7x sin explotar',priority:'alta'},
+    {text:'Configurar GitHub — acceso a Chroma HQ',priority:'media'},
+    {text:'Poner Whimsical en anaquel de Traveler',priority:'media'},
+    {text:'Pedir copias de autor de todos los libros',priority:'media'},
+    {text:'Analizar distribuidores B2B de TikTok Shop',priority:'baja'},
+  ],
+  marketing:[
+    {text:'Configurar Spark Ads y afiliados para lanzamiento 7 abril',priority:'alta'},
+    {text:'Crear agencia de marketing con agentes IA para TikTok',priority:'alta'},
+    {text:'Campaña Facebook para comunidad Inkalia Tracers',priority:'media'},
+    {text:'Cancelar ChatGPT y Gemini — consolidar en Claude Max',priority:'alta'},
+  ],
+  creativa:[
+    {text:'Terminar imágenes de sirenas y escoger finales',priority:'alta'},
+    {text:'Actualizar A+ de pilares — Hidden Cities y Fairy Houses',priority:'alta'},
+    {text:'Cambiar portada de Fairy Houses — mano está mal',priority:'media'},
+    {text:'Vol 2 de Fairy Houses con técnica de sirenas',priority:'media'},
+    {text:'Explorar nicho de notebooks para regreso a clases',priority:'baja'},
+  ],
+  ingenieria:[
+    {text:'Evaluar n8n o Flowise como orquestador de agentes',priority:'alta'},
+    {text:'Agente scout para comunidad en redes sociales',priority:'alta'},
+    {text:'Conectar API PublisherChamp con Chroma Intelligence',priority:'media'},
+    {text:'Integrar BookBeam API para Chroma CI',priority:'media'},
+  ],
+  metas:[
+    {text:'Generar $1,000,000 mensuales en regalías KDP',priority:'alta'},
+    {text:'Alcanzar $100K mensuales para finales de 2026',priority:'alta'},
+    {text:'Ayudar a Rebe y Lu a llegar a $10K/mes',priority:'media'},
+    {text:'Registrar patente del método Inkalia Tracing',priority:'media'},
+  ],
+  redes:[
+    {text:'Crear protocolos de comunicación para Inkalia',priority:'alta'},
+    {text:'Subir videos raw a carpeta de Drive',priority:'media'},
+    {text:'Programar cuenta de TikTok con estrategia',priority:'media'},
+    {text:'Landing page con Clickfunnels para mailing list',priority:'media'},
+  ],
+  rebe:[
+    {text:'Preparar material de onboarding de Claude Code',priority:'alta'},
+    {text:'Documentar procesos que evolucionaron en su ausencia',priority:'alta'},
+    {text:'Estrategia prioritaria de Kindle Scribe',priority:'media'},
+  ],
+  eva:[
+    {text:'Sistema para pasar videos de IG a Eva para análisis',priority:'alta'},
+    {text:'Agencia de marketing con agentes para TikTok',priority:'alta'},
+  ],
+};
+
+// State
+let tasks = {};
+let activeList = 'chroma';
+let blockTasks = [];
+let nextId = Date.now();
+let activeBlockTask = null;
+let timerInterval=null,timerRunning=false,timerMode='work';
+let timerSeconds=25*60,totalSeconds=25*60,pomCount=0;
+let initialized = false;
+
+// Sync status
+function setSyncStatus(status) {
+  const dot = document.getElementById('syncDot');
+  dot.className = 'sync-dot ' + status;
+}
+
+// Firebase: save task
+async function saveTask(listId, task) {
+  setSyncStatus('syncing');
+  await setDoc(doc(db, 'tasks', task.id), { ...task, listId });
+  setSyncStatus('synced');
+}
+
+// Firebase: delete task
+async function removeTask(taskId) {
+  setSyncStatus('syncing');
+  await deleteDoc(doc(db, 'tasks', taskId));
+  setSyncStatus('synced');
+}
+
+// Firebase: init with default data if empty
+async function initDefaults() {
+  const snap = await getDocs(collection(db, 'tasks'));
+  if (snap.empty) {
+    setSyncStatus('syncing');
+    for (const [listId, items] of Object.entries(INIT_TASKS)) {
+      for (const item of items) {
+        const id = 'task_' + Date.now() + '_' + Math.random().toString(36).substr(2,6);
+        await setDoc(doc(db, 'tasks', id), { ...item, id, listId, done: false, createdAt: Date.now() });
+        await new Promise(r => setTimeout(r, 20));
+      }
+    }
+    setSyncStatus('synced');
+  }
+}
+
+// Firebase: listen realtime
+function startListening() {
+  onSnapshot(collection(db, 'tasks'), (snap) => {
+    tasks = {};
+    LISTS.forEach(l => tasks[l.id] = []);
+    snap.forEach(d => {
+      const task = d.data();
+      if (!tasks[task.listId]) tasks[task.listId] = [];
+      tasks[task.listId].push(task);
+    });
+    renderAll();
+    setSyncStatus('synced');
+  });
+}
+
+// Pomodoro
+function pad(n){return String(n).padStart(2,'0');}
+function updateTimerDisplay(){
+  const m=Math.floor(timerSeconds/60),s=timerSeconds%60;
+  const el=document.getElementById('timerDisplay');
+  el.textContent=pad(m)+':'+pad(s);
+  el.className='pom-timer'+(timerRunning?(timerMode==='work'?' running':' break'):'');
+  document.getElementById('timerProgress').style.width=Math.round((timerSeconds/totalSeconds)*100)+'%';
+}
+function setMode(mode){
+  timerMode=mode;timerRunning=false;clearInterval(timerInterval);
+  timerSeconds=mode==='work'?25*60:5*60;totalSeconds=timerSeconds;
+  document.getElementById('startBtn').textContent='INICIAR';
+  document.getElementById('btnWork').className='pom-mode-btn'+(mode==='work'?' active':'');
+  document.getElementById('btnBreak').className='pom-mode-btn'+(mode==='break'?' active':'');
+  updateTimerDisplay();
+}
+window.setMode = setMode;
+function toggleTimer(){
+  if(timerRunning){
+    timerRunning=false;clearInterval(timerInterval);
+    document.getElementById('startBtn').textContent='CONTINUAR';
+  } else {
+    timerRunning=true;document.getElementById('startBtn').textContent='PAUSAR';
+    timerInterval=setInterval(()=>{
+      timerSeconds--;updateTimerDisplay();
+      if(timerSeconds<=0){
+        clearInterval(timerInterval);timerRunning=false;
+        if(timerMode==='work'){pomCount++;updatePomDots();showToast('// pomodoro completado — toma un break');setMode('break');}
+        else{showToast('// break terminado — de vuelta al trabajo');setMode('work');}
+      }
+    },1000);
+  }
+  updateTimerDisplay();
+}
+window.toggleTimer = toggleTimer;
+function resetTimer(){
+  timerRunning=false;clearInterval(timerInterval);
+  timerSeconds=timerMode==='work'?25*60:5*60;totalSeconds=timerSeconds;
+  document.getElementById('startBtn').textContent='INICIAR';updateTimerDisplay();
+}
+window.resetTimer = resetTimer;
+function updatePomDots(){
+  const c=document.getElementById('pomDots');c.innerHTML='';
+  for(let i=0;i<4;i++){const d=document.createElement('div');d.className='pom-dot'+(i<pomCount%4?' done':'');c.appendChild(d);}
+  document.getElementById('pomSessionLabel').textContent='sesión '+(pomCount%4)+' de 4';
+}
+
+// Block
+function renderBlock(){
+  const c=document.getElementById('blockItems');
+  document.getElementById('blockCount').textContent=blockTasks.length+'/3 tareas';
+  if(!blockTasks.length){c.innerHTML='<div class="block-empty">// agrega hasta 3 tareas desde las listas</div>';return;}
+  c.innerHTML='';
+  blockTasks.forEach((task,i)=>{
+    const isActive=activeBlockTask&&activeBlockTask.id===task.id;
+    const div=document.createElement('div');
+    div.className='block-item'+(isActive?' active-pom':'')+(task.done?' done-item':'');
+    div.innerHTML=`<div class="block-num">0${i+1}</div>
+      <div class="block-check${task.done?' checked':''}" onclick="toggleBlockDone(${i})"></div>
+      <div class="block-text${task.done?' striked':''}">${task.text}</div>
+      <div class="block-actions">
+        <button class="micro-btn" onclick="focusBlock(${i})">ENFOCAR</button>
+        <button class="micro-btn danger" onclick="removeFromBlock(${i})">✕</button>
+      </div>`;
+    c.appendChild(div);
+  });
+}
+window.toggleBlockDone = function(i){
+  blockTasks[i].done=!blockTasks[i].done;
+  if(blockTasks.filter(t=>t.done).length===blockTasks.length&&blockTasks.length>0)showToast('// bloque completado');
+  renderBlock();updateStats();
+};
+window.focusBlock = function(i){
+  activeBlockTask=blockTasks[i];
+  document.getElementById('activeTaskName').textContent=blockTasks[i].text.substring(0,45)+(blockTasks[i].text.length>45?'…':'');
+  renderBlock();
+};
+window.removeFromBlock = function(i){blockTasks.splice(i,1);renderBlock();};
+window.clearBlock = function(){blockTasks=[];activeBlockTask=null;document.getElementById('activeTaskName').textContent='—';renderBlock();};
+window.toggleBlockInput = function(){
+  const r=document.getElementById('blockInputRow');r.style.display=r.style.display==='none'?'flex':'none';
+};
+window.addToBlockManual = function(){
+  const inp=document.getElementById('blockInput');const text=inp.value.trim();if(!text)return;
+  if(blockTasks.length>=3){showToast('// bloque lleno');return;}
+  blockTasks.push({id:'b'+Date.now(),text,done:false});inp.value='';
+  document.getElementById('blockInputRow').style.display='none';renderBlock();
+};
+window.addToBlock = function(taskId){
+  const allTasks=Object.values(tasks).flat();
+  const task=allTasks.find(t=>t.id===taskId);if(!task)return;
+  if(blockTasks.length>=3){showToast('// bloque lleno — completa una tarea primero');return;}
+  if(blockTasks.find(t=>t.id===task.id)){showToast('// ya está en el bloque');return;}
+  blockTasks.push({...task});renderBlock();showToast('// agregado al bloque');
+};
+
+// Lists
+function renderNav(){
+  const c=document.getElementById('listsNav');c.innerHTML='';
+  LISTS.forEach(list=>{
+    const count=(tasks[list.id]||[]).filter(t=>!t.done).length;
+    const btn=document.createElement('button');
+    btn.className='list-tab'+(list.id===activeList?' active':'');
+    btn.textContent=list.name+(count?' ('+count+')':'');
+    btn.onclick=()=>{activeList=list.id;renderAll();};
+    c.appendChild(btn);
+  });
+  const all=document.createElement('button');
+  all.className='list-tab'+(activeList==='__all__'?' active':'');
+  const totalPending=Object.values(tasks).flat().filter(t=>!t.done).length;
+  all.textContent='TODAS ('+totalPending+')';
+  all.onclick=()=>{activeList='__all__';renderAll();};
+  c.insertBefore(all, c.firstChild);
+  const add=document.createElement('button');
+  add.className='list-tab add-tab';add.textContent='+ NUEVA';
+  add.onclick=addNewList;c.appendChild(add);
+}
+function addNewList(){
+  const name=prompt('Nombre de la nueva lista:');if(!name||!name.trim())return;
+  const id=name.toLowerCase().replace(/\s+/g,'_');
+  if(LISTS.find(l=>l.id===id)){showToast('// esa lista ya existe');return;}
+  LISTS.push({id,name:name.trim().toUpperCase()});
+  tasks[id]=[];activeList=id;renderAll();
+}
+
+function renderTaskList(){
+  const panel=document.getElementById('taskListPanel');
+  const isAll = activeList==='__all__';
+  const list = isAll ? Object.values(tasks).flat() : (tasks[activeList]||[]);
+  const sorted=[...list].sort((a,b)=>{
+    if(a.done!==b.done)return a.done?1:-1;
+    const p={alta:0,media:1,baja:2};return p[a.priority]-p[b.priority];
+  });
+  let html='';
+  sorted.forEach(task=>{
+    const listName = isAll ? (LISTS.find(l=>l.id===task.listId)?.name||task.listId)+' · ' : '';
+    html+=`<div class="task-item${task.done?' done-item':''}">
+      <div class="task-prio p-${task.priority}"></div>
+      <div class="task-body">
+        <div class="task-title${task.done?' striked':''}">${task.text}</div>
+        <div class="task-meta">${listName}${task.priority.toUpperCase()} PRIORIDAD</div>
+      </div>
+      <div class="task-acts">
+        <button class="micro-btn" onclick="addToBlock('${task.id}')">BLOQUE</button>
+        <button class="micro-btn" onclick="toggleDone('${task.id}')">${task.done?'REABRIR':'LISTO'}</button>
+        <button class="micro-btn danger" onclick="deleteTask('${task.id}')">✕</button>
+      </div>
+    </div>`;
+  });
+  html+=`<div class="add-area">
+    <div class="add-row">
+      <input class="add-input" id="newTaskInput" placeholder="escribe una tarea — Eva la clasificará automáticamente..."
+        onkeydown="if(event.key==='Enter'){addTask()}">
+      <button class="btn-primary" style="padding:7px 12px;font-size:10px;white-space:nowrap" onclick="addTask()">+ OK</button>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;margin-top:6px">
+      <select class="prio-select" id="prioritySel">
+        <option value="alta">ALTA</option>
+        <option value="media" selected>MEDIA</option>
+        <option value="baja">BAJA</option>
+      </select>
+      <span class="add-hint">// eva detecta la lista automáticamente</span>
+    </div>
+  </div>`;
+  panel.innerHTML=html;
+}
+
+window.toggleDone = async function(taskId){
+  const allTasks=Object.values(tasks).flat();
+  const task=allTasks.find(t=>t.id===taskId);if(!task)return;
+  task.done=!task.done;
+  await saveTask(task.listId,task);
+};
+window.deleteTask = async function(taskId){
+  await removeTask(taskId);
+};
+window.addTask = async function(){
+  const inp=document.getElementById('newTaskInput');
+  const sel=document.getElementById('prioritySel');
+  const text=inp.value.trim();if(!text)return;
+  const priority=sel?sel.value:'media';
+  const detected=classify(text);
+  const id='task_'+Date.now()+'_'+Math.random().toString(36).substr(2,6);
+  const task={id,text,priority,done:false,listId:detected,createdAt:Date.now()};
+  inp.value='';
+  const listName=LISTS.find(l=>l.id===detected)?.name||detected;
+  showToast('// guardado en: '+listName);
+  if(detected!==activeList){activeList=detected;}
+  await saveTask(detected,task);
+};
+
+function updateStats(){
+  const total=Object.values(tasks).flat();
+  const pending=total.filter(t=>!t.done).length;
+  const done=total.filter(t=>t.done).length;
+  document.getElementById('statsDisplay').textContent=pending+' pendientes · '+done+' completadas';
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;t.className='toast show';
+  setTimeout(()=>t.className='toast',2500);
+}
+
+function renderAll(){renderNav();renderTaskList();renderBlock();updateStats();}
+
+function initDate(){
+  const d=new Date();
+  const days=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+  const months=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  document.getElementById('dateDisplay').textContent=days[d.getDay()].toUpperCase()+' '+d.getDate()+' '+months[d.getMonth()].toUpperCase()+' '+d.getFullYear();
+}
+
+// Init
+initDate();updatePomDots();updateTimerDisplay();
+setSyncStatus('syncing');
+LISTS.forEach(l=>tasks[l.id]=[]);
+renderAll();
+initDefaults().then(()=>startListening()).catch(e=>{console.error(e);showToast('// error conectando a Firebase');setSyncStatus('');});
+</script>
+</body>
+</html>
