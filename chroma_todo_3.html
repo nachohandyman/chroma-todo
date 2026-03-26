@@ -37,8 +37,8 @@ body::before {
   position: fixed;
   inset: 0;
   background-image:
-    linear-gradient(rgba(61,255,192,0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(61,255,192,0.05) 1px, transparent 1px);
+    linear-gradient(rgba(61,255,192,0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(61,255,192,0.12) 1px, transparent 1px);
   background-size: 40px 40px;
   pointer-events: none;
   z-index: 0;
@@ -167,27 +167,27 @@ body::before {
   display: none;
   flex-direction: column;
   align-items: center;
-  padding: 20px 16px 16px;
+  padding: 16px 16px 16px;
   position: relative;
 }
 .clock-overlay.active { display: flex; }
-.analog-clock-wrap { position: relative; width: 180px; height: 180px; margin-bottom: 16px; }
-.analog-clock-wrap canvas { width: 180px; height: 180px; }
+.analog-clock-wrap { position: relative; width: 140px; height: 140px; margin-bottom: 12px; }
+.analog-clock-wrap canvas { width: 140px; height: 140px; }
 .clock-countdown {
-  font-family: var(--font-mono); font-size: 36px; font-weight: 700;
+  font-family: var(--font-mono); font-size: 32px; font-weight: 700;
   color: var(--accent); letter-spacing: -0.02em;
   text-shadow: 0 0 20px rgba(61,255,192,0.4);
   margin-bottom: 6px;
 }
 .clock-countdown.break { color: var(--accent3); text-shadow: 0 0 20px rgba(77,159,255,0.4); }
 .clock-task-label {
-  font-size: 14px; color: var(--text-dim);
+  font-size: 13px; color: var(--text-dim);
   text-align: center; max-width: 280px;
   line-height: 1.5;
   font-weight: 500;
 }
-.clock-task-label strong { color: var(--text); font-weight: 600; display: block; margin-top: 3px; font-size: 15px; }
-.clock-controls { display: flex; gap: 8px; margin-top: 14px; }
+.clock-task-label strong { color: var(--text); font-weight: 600; display: block; margin-top: 3px; font-size: 14px; }
+.clock-controls { display: flex; gap: 8px; margin-top: 12px; }
 
 /* ── BLOCK ── */
 .block-items { padding: 10px; display: flex; flex-direction: column; gap: 7px; min-height: 60px; }
@@ -316,14 +316,84 @@ body::before {
   color: var(--text-muted); margin-top: 4px; letter-spacing: 0.06em;
 }
 
-/* Actions — revealed on tap (always visible on wider screens) */
+/* 3-dot menu */
 .task-acts {
   display: flex;
-  gap: 4px;
   align-items: center;
-  padding: 0 10px 0 4px;
+  padding: 0 8px 0 4px;
   flex-shrink: 0;
   align-self: center;
+  position: relative;
+}
+.task-menu-btn {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+  line-height: 1;
+  padding: 0;
+  flex-shrink: 0;
+}
+.task-menu-btn:hover { background: var(--surface2); color: var(--accent); }
+.task-dropdown {
+  display: none;
+  position: absolute;
+  right: 0; top: 38px;
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  z-index: 50;
+  min-width: 150px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  overflow: hidden;
+}
+.task-dropdown.open { display: block; }
+.task-dropdown-item {
+  display: block; width: 100%;
+  padding: 12px 16px;
+  border: none; border-bottom: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font-family: var(--font-mono); font-size: 11px;
+  letter-spacing: 0.06em;
+  cursor: pointer; text-align: left;
+  transition: background 0.15s;
+}
+.task-dropdown-item:last-child { border-bottom: none; }
+.task-dropdown-item:hover { background: var(--surface2); color: var(--accent); }
+.task-dropdown-item.danger:hover { color: var(--red); }
+
+/* Undo toast */
+.undo-toast {
+  position: fixed; bottom: 24px; left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  background: var(--surface); border: 1px solid var(--accent);
+  border-radius: 10px; padding: 10px 14px;
+  font-family: var(--font-mono); font-size: 12px;
+  color: var(--text); letter-spacing: 0.04em;
+  opacity: 0; transition: all 0.25s; pointer-events: none;
+  z-index: 400; display: flex; align-items: center; gap: 12px;
+  box-shadow: 0 0 24px rgba(61,255,192,0.15);
+  white-space: nowrap;
+}
+.undo-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: all; }
+.undo-btn {
+  background: var(--accent); color: var(--bg);
+  border: none; border-radius: 6px;
+  padding: 5px 12px;
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  cursor: pointer; letter-spacing: 0.05em;
+}
+.undo-progress {
+  position: absolute; bottom: 0; left: 0;
+  height: 3px; background: var(--accent);
+  border-radius: 0 0 10px 10px;
+  transition: width 3s linear;
 }
 
 /* Add area */
@@ -412,13 +482,41 @@ body::before {
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-/* ── RESPONSIVE ── */
+/* ── QUICK ADD ── */
+.quick-add-bar {
+  display: flex; gap: 10px; align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  transition: border-color 0.2s;
+}
+.quick-add-bar:focus-within { border-color: rgba(61,255,192,0.4); }
+.quick-add-icon {
+  font-size: 18px; color: var(--text-muted); flex-shrink: 0;
+  font-family: var(--font-mono);
+}
+.quick-add-input {
+  flex: 1; background: transparent;
+  border: none; outline: none;
+  font-size: 15px; color: var(--text);
+  font-family: var(--font-body);
+}
+.quick-add-input::placeholder { color: var(--text-muted); }
+.quick-add-btn {
+  background: var(--accent); color: var(--bg);
+  border: none; border-radius: 8px;
+  width: 32px; height: 32px;
+  font-size: 20px; font-weight: 700;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: background 0.15s; line-height: 1;
+}
+.quick-add-btn:hover { background: #2dedb0; }
 @media (max-width: 480px) {
   body { font-size: 15px; }
   .pom-timer { font-size: 40px; min-width: 98px; }
   .task-title { font-size: 15px; }
-  .task-acts { gap: 3px; padding: 0 8px 0 2px; }
-  .micro-btn { font-size: 9px; padding: 4px 6px; }
   .task-check-area { width: 46px; }
 }
 </style>
@@ -442,6 +540,15 @@ body::before {
         <span id="statsDisplay">conectando...</span>
       </div>
     </div>
+  </div>
+
+  <!-- Quick Add -->
+  <div class="quick-add-bar">
+    <span class="quick-add-icon">+</span>
+    <input class="quick-add-input" id="quickAddInput"
+      placeholder="Nueva tarea..."
+      onkeydown="if(event.key==='Enter'){quickAddTask()}">
+    <button class="quick-add-btn" onclick="quickAddTask()">↵</button>
   </div>
 
   <!-- Pomodoro -->
@@ -529,6 +636,11 @@ body::before {
 </div>
 
 <div class="toast" id="toast"></div>
+<div class="undo-toast" id="undoToast">
+  <span id="undoMsg">// tarea completada</span>
+  <button class="undo-btn" onclick="undoComplete()">DESHACER</button>
+  <div class="undo-progress" id="undoProgress" style="width:100%"></div>
+</div>
 
 <!-- Move modal -->
 <div class="modal-overlay" id="moveModal" style="display:none" onclick="if(event.target===this)hideMoveModal()">
@@ -896,14 +1008,14 @@ function drawClock(){
   ctx.fill();
   ctx.shadowBlur=0;
 
-  // Digital time inside clock (small)
+  // Digital time inside clock (small) — bottom area only
   const hh=String(now.getHours()).padStart(2,'0');
   const mm=String(now.getMinutes()).padStart(2,'0');
-  ctx.font='bold 22px "Space Mono", monospace';
-  ctx.fillStyle='rgba(61,255,192,0.5)';
+  ctx.font='bold 18px "Space Mono", monospace';
+  ctx.fillStyle='rgba(61,255,192,0.45)';
   ctx.textAlign='center';
   ctx.textBaseline='middle';
-  ctx.fillText(hh+':'+mm, cx, cy+R*0.32);
+  ctx.fillText(hh+':'+mm, cx, cy+R*0.48);
 }
 
 // ── BLOCK ──
@@ -1021,10 +1133,14 @@ function renderTaskList(){
         <div class="task-meta">${listName}${task.priority.toUpperCase()} PRIORIDAD</div>
       </div>
       <div class="task-acts">
-        <button class="micro-btn" onclick="addToBlock('${task.id}')">BLOQUE</button>
-        <button class="micro-btn" onclick="showEditModal('${task.id}')">EDITAR</button>
-        <button class="micro-btn" onclick="showMoveModal('${task.id}')">MOVER</button>
-        <button class="micro-btn danger" onclick="deleteTask('${task.id}')">✕</button>
+        <button class="task-menu-btn" onclick="toggleTaskMenu(event,'${task.id}')">⋯</button>
+        <div class="task-dropdown" id="menu_${task.id}">
+          <button class="task-dropdown-item" onclick="addToBlock('${task.id}');closeAllMenus()">+ BLOQUE</button>
+          <button class="task-dropdown-item" onclick="showEditModal('${task.id}');closeAllMenus()">✎ EDITAR</button>
+          <button class="task-dropdown-item" onclick="showMoveModal('${task.id}');closeAllMenus()">→ MOVER</button>
+          ${task.done?`<button class="task-dropdown-item" onclick="reactivateTask('${task.id}');closeAllMenus()">↺ REABRIR</button>`:''}
+          <button class="task-dropdown-item danger" onclick="deleteTask('${task.id}');closeAllMenus()">✕ ELIMINAR</button>
+        </div>
       </div>
     </div>`;
   });
@@ -1048,11 +1164,89 @@ function renderTaskList(){
   panel.innerHTML=html;
 }
 
-window.toggleDone=async function(taskId){
-  const t=Object.values(tasks).flat().find(t=>t.id===taskId); if(!t)return;
-  t.done=!t.done; await saveTask(t.listId,t);
+// ── UNDO COMPLETE ──
+let undoTimeout = null;
+let undoTaskId = null;
+let undoTaskPrev = null;
+
+window.toggleDone = async function(taskId){
+  const t = Object.values(tasks).flat().find(t => t.id === taskId);
+  if(!t) return;
+  const wasDone = t.done;
+  t.done = !t.done;
+  await saveTask(t.listId, t);
+  if(!wasDone){
+    // Just completed — show undo
+    showUndoToast(taskId, t.text);
+  }
 };
-window.deleteTask=async function(taskId){ await removeTask(taskId); };
+
+function showUndoToast(taskId, text){
+  if(undoTimeout){ clearTimeout(undoTimeout); }
+  undoTaskId = taskId;
+  const short = text.length > 30 ? text.substring(0,30)+'…' : text;
+  document.getElementById('undoMsg').textContent = '✓ ' + short;
+  const prog = document.getElementById('undoProgress');
+  const toast = document.getElementById('undoToast');
+  prog.style.transition = 'none';
+  prog.style.width = '100%';
+  toast.classList.add('show');
+  // Trigger progress bar animation
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      prog.style.transition = 'width 3s linear';
+      prog.style.width = '0%';
+    });
+  });
+  undoTimeout = setTimeout(()=>{
+    toast.classList.remove('show');
+    undoTaskId = null;
+  }, 3000);
+}
+
+window.undoComplete = function(){
+  if(!undoTaskId) return;
+  clearTimeout(undoTimeout);
+  document.getElementById('undoToast').classList.remove('show');
+  const t = Object.values(tasks).flat().find(t => t.id === undoTaskId);
+  if(t){ t.done = false; saveTask(t.listId, t); }
+  undoTaskId = null;
+};
+
+window.reactivateTask = async function(taskId){
+  const t = Object.values(tasks).flat().find(t => t.id === taskId);
+  if(!t) return;
+  t.done = false;
+  await saveTask(t.listId, t);
+  showToast('// tarea reabierta');
+};
+
+window.deleteTask = async function(taskId){ await removeTask(taskId); };
+
+// ── 3-DOT MENU ──
+window.toggleTaskMenu = function(e, taskId){
+  e.stopPropagation();
+  const menu = document.getElementById('menu_'+taskId);
+  const isOpen = menu.classList.contains('open');
+  closeAllMenus();
+  if(!isOpen) menu.classList.add('open');
+};
+window.closeAllMenus = function(){
+  document.querySelectorAll('.task-dropdown.open').forEach(m => m.classList.remove('open'));
+};
+document.addEventListener('click', ()=> closeAllMenus());
+window.quickAddTask = async function(){
+  const inp = document.getElementById('quickAddInput');
+  const text = inp.value.trim(); if(!text) return;
+  const detected = classify(text);
+  const id = 'task_'+Date.now()+'_'+Math.random().toString(36).substr(2,6);
+  const task = {id, text, priority:'media', done:false, listId:detected, createdAt:Date.now()};
+  inp.value='';
+  showToast('// guardado en: '+(LISTS.find(l=>l.id===detected)?.name||detected));
+  activeList = detected;
+  await saveTask(detected, task);
+};
+
 window.addTask=async function(){
   const inp=document.getElementById('newTaskInput');
   const sel=document.getElementById('prioritySel');
