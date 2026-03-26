@@ -8,18 +8,22 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #080c10; --surface: #0d1318; --surface2: #111920;
-  --border: rgba(255,255,255,0.07); --accent: #3dffc0;
+  --bg: #030608; --surface: #0a1018; --surface2: #0f1820;
+  --border: rgba(255,255,255,0.10); --accent: #00ffbe;
   --accent2: #ff6b35; --accent3: #4d9fff;
-  --text: #e8f0f5; --text-muted: #5a7080; --text-dim: #8aa0b0;
+  --text: #f0f8ff; --text-muted: #6a8595; --text-dim: #9ab0c0;
   --font-mono: 'Space Mono', monospace; --font-body: 'DM Sans', sans-serif;
-  --red: #ff4d6d; --amber: #ffb347; --green: #3dffc0;
+  --red: #ff3355; --amber: #ffaa00; --green: #00ffbe;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: var(--bg); color: var(--text); font-family: var(--font-body); min-height: 100vh; font-size: 16px; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: var(--font-body); min-height: 100vh; font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+}
 body::before {
   content: ''; position: fixed; inset: 0;
-  background-image: linear-gradient(rgba(61,255,192,0.12) 1px,transparent 1px), linear-gradient(90deg,rgba(61,255,192,0.12) 1px,transparent 1px);
+  background-image: linear-gradient(rgba(0,255,190,0.15) 1px,transparent 1px), linear-gradient(90deg,rgba(0,255,190,0.15) 1px,transparent 1px);
   background-size: 40px 40px; pointer-events: none; z-index: 0;
 }
 .app { position: relative; z-index: 1; max-width: 720px; margin: 0 auto; padding: 1.25rem 1rem; }
@@ -167,13 +171,13 @@ body::before {
   border-radius: 50%;
   border: none;
   background:
-    radial-gradient(circle at 40% 30%, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 60%),
-    radial-gradient(circle at 50% 50%, #3dffc0 0%, #1ab87a 60%, #0d8a57 100%);
+    radial-gradient(circle at 40% 30%, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 60%),
+    radial-gradient(circle at 50% 50%, #00ffbe 0%, #00cc96 60%, #008f68 100%);
   box-shadow:
-    0 4px 10px rgba(0,0,0,0.45),
+    0 4px 10px rgba(0,0,0,0.5),
     0 1px 3px rgba(0,0,0,0.3),
-    inset 0 1px 1px rgba(255,255,255,0.4),
-    0 0 8px rgba(61,255,192,0.3);
+    inset 0 1px 1px rgba(255,255,255,0.45),
+    0 0 10px rgba(0,255,190,0.4);
   color: #fff;
   font-size: 11px;
   font-weight: 900;
