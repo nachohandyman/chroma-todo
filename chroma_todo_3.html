@@ -161,8 +161,41 @@ body::before {
 .task-title.striked { text-decoration: line-through; color: var(--text-muted); }
 .task-meta { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); margin-top: 4px; letter-spacing: 0.06em; }
 
-/* 3-dot menu */
-.task-acts { display: flex; align-items: center; padding: 0 8px 0 4px; flex-shrink: 0; align-self: center; position: relative; }
+/* Focus button — glossy 3D */
+.task-focus-btn {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  border: none;
+  background:
+    radial-gradient(circle at 40% 30%, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 60%),
+    radial-gradient(circle at 50% 50%, #3dffc0 0%, #1ab87a 60%, #0d8a57 100%);
+  box-shadow:
+    0 4px 10px rgba(0,0,0,0.45),
+    0 1px 3px rgba(0,0,0,0.3),
+    inset 0 1px 1px rgba(255,255,255,0.4),
+    0 0 8px rgba(61,255,192,0.3);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  line-height: 1;
+  margin-bottom: 2px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+.task-focus-btn:hover {
+  transform: scale(1.1);
+  box-shadow:
+    0 6px 14px rgba(0,0,0,0.5),
+    0 1px 3px rgba(0,0,0,0.3),
+    inset 0 1px 1px rgba(255,255,255,0.5),
+    0 0 14px rgba(61,255,192,0.5);
+}
+.task-focus-btn:active { transform: scale(0.95); }
+.task-acts { display: flex; flex-direction: column; align-items: center; padding: 0 8px 0 4px; flex-shrink: 0; align-self: center; position: relative; gap: 2px; }
 .task-menu-btn { width: 34px; height: 34px; border-radius: 50%; border: none; background: transparent; color: var(--text-muted); font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; padding: 0; flex-shrink: 0; line-height: 1; letter-spacing: -2px; }
 .task-menu-btn:hover { background: var(--surface2); color: var(--accent); }
 .task-dropdown { display: none; position: absolute; right: 0; top: 38px; background: var(--surface); border: 1px solid var(--accent); border-radius: 10px; z-index: 50; min-width: 155px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); overflow: hidden; }
@@ -845,9 +878,9 @@ function taskHTML(task, showList){
       <div class="task-meta">${listName}${task.priority.toUpperCase()} PRIORIDAD</div>
     </div>
     <div class="task-acts">
+      <button class="task-focus-btn" title="Agregar al bloque" onclick="addToBlock('${task.id}')">GO</button>
       <button class="task-menu-btn" onclick="toggleTaskMenu(event,'${task.id}')">···</button>
       <div class="task-dropdown" id="menu_${task.id}">
-        <button class="task-dropdown-item" onclick="addToBlock('${task.id}');closeAllMenus()">+ BLOQUE</button>
         <button class="task-dropdown-item" onclick="showEditModal('${task.id}');closeAllMenus()">✎ EDITAR</button>
         <button class="task-dropdown-item" onclick="showMoveModal('${task.id}');closeAllMenus()">→ MOVER</button>
         ${task.done?`<button class="task-dropdown-item" onclick="reactivateTask('${task.id}');closeAllMenus()">↺ REABRIR</button>`:''}
